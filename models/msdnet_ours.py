@@ -108,19 +108,23 @@ class ClassifierModuleOurs(nn.Module):
                         nn.ReLU())
 
 
-            self.bn1 = BottleneckSE(hidden_channel, hidden_channel// 2, kernel_size=3, stride=2, padding=1,
-                        downsample=nn.Sequential(conv1x1(hidden_channel, hidden_channel * 2, stride=2),
-                                                nn.BatchNorm2d(hidden_channel * 2)), has_se=True)
-            num_btn = self.num_btn - 1
+            #self.bn1 = BottleneckSE(hidden_channel, hidden_channel// 2, kernel_size=3, stride=2, padding=1,
+            #            downsample=nn.Sequential(conv1x1(hidden_channel, hidden_channel * 2, stride=2),
+            #                                    nn.BatchNorm2d(hidden_channel * 2)), has_se=True)
+            #num_btn = self.num_btn - 1
 
             self.btns = []
             for i in range(num_btn):
-                self.btns.append(BottleneckSE(hidden_channel * 2, hidden_channel// 2, kernel_size=3, stride=1, padding=1,
-                            downsample=nn.Sequential(conv1x1(hidden_channel * 2, hidden_channel * 2, stride=1),
-                                                    nn.BatchNorm2d(hidden_channel * 2)), has_se=True))
+                #self.btns.append(BottleneckSE(hidden_channel * 2, hidden_channel// 2, kernel_size=3, stride=1, padding=1,
+                #            downsample=nn.Sequential(conv1x1(hidden_channel * 2, hidden_channel * 2, stride=1),
+                #                                    nn.BatchNorm2d(hidden_channel * 2)), has_se=True))
+                self.btns.append(BottleneckSE(hidden_channel, hidden_channel// 4, kernel_size=3, stride=1, padding=1,
+                            downsample=nn.Sequential(conv1x1(hidden_channel, hidden_channel, stride=1),
+                                                    nn.BatchNorm2d(hidden_channel)), has_se=True))
             self.btns = nn.Sequential(*self.btns)
             #self.linear = nn.Linear(hidden_channel * 2 * expansion, num_classes)
-            self.linear = LastLinear(hidden_channel * 2 * expansion, num_classes)
+            #self.linear = LastLinear(hidden_channel * 2 * expansion, num_classes)
+            self.linear = LastLinear(hidden_channel * expansion, num_classes)
 
 
     def forward(self, x):
@@ -128,7 +132,7 @@ class ClassifierModuleOurs(nn.Module):
             out = self.avgpool(x)
         else:
             out = self.scale(x) # 256x14x14
-            out = self.bn1(out) # 512x7x7
+            #out = self.bn1(out) # 512x7x7
             out = self.btns(out) # 512x7x7
         out = torch.flatten(out, 1)
         out = self.linear(out)
@@ -358,7 +362,8 @@ class MSDNet(nn.Module):
 
         nIn = args.nChannels
         #down_scales = [4, 4, 2, 2, 1, 1]
-        down_scales = [1, 1, 1, 1, 1, 1]
+        #down_scales = [1, 1, 1, 1, 1, 1]
+        down_scales = [2, 2, 2, 2, 2, 2]
         self.bottlenecks = [3, 3, 2, 2, 1, 1]
         for i in range(self.nBlocks):
             print(' ********************** Block {} '
@@ -377,7 +382,7 @@ class MSDNet(nn.Module):
                 # (ClassifierModule(in_channel=64 * block.expansion, hidden_channel=256 * block.expansion, down_scale=4, num_btn=bottlenecks[0], expansion=7*7, num_classes=num_classes))
                 if i != self.nBlocks - 1:
                     self.classifier.append(
-                        ClassifierModuleOurs(in_channel=nIn * args.grFactor[-1], hidden_channel=32, down_scale=down_scales[i], num_btn=self.bottlenecks[i], expansion=4*4, num_classes=100))
+                        ClassifierModuleOurs(in_channel=nIn * args.grFactor[-1], hidden_channel=128, down_scale=down_scales[i], num_btn=self.bottlenecks[i], expansion=4*4, num_classes=100))
                 else:
                     self.classifier.append(
                         self._build_classifier_cifar(nIn * args.grFactor[-1], 100))
