@@ -73,9 +73,12 @@ def measure_layer(layer, x):
         delta_params = get_layer_param(layer)
 
     ### ops_linear
-    elif type_name in ['Linear']:
+    elif type_name in ['Linear', 'LastLinear']:
         weight_ops = layer.weight.numel() * multi_add
-        bias_ops = layer.bias.numel()
+        if layer.bias is not None:
+            bias_ops = layer.bias.numel()
+        else:
+            bias_ops = 0
         delta_ops = x.size()[0] * (weight_ops + bias_ops)
         delta_params = get_layer_param(layer)
 
@@ -83,7 +86,7 @@ def measure_layer(layer, x):
     elif type_name in ['BatchNorm2d', 'Dropout2d', 'DropChannel', 'Dropout',
                        'MSDNFirstLayer', 'ConvBasic', 'ConvBN',
                        'ParallelModule', 'MSDNet', 'Sequential',
-                       'MSDNLayer', 'ConvDownNormal', 'ConvNormal', 'ClassifierModule']:
+                       'MSDNLayer', 'ConvDownNormal', 'ConvNormal', 'ClassifierModule', 'Sigmoid']:
         delta_params = get_layer_param(layer)
 
 
@@ -93,7 +96,8 @@ def measure_layer(layer, x):
 
     count_ops += delta_ops
     count_params += delta_params
-    if type_name == 'Linear':
+    #if type_name == 'Linear':
+    if type_name == 'LastLinear':
         print('---------------------')
         print('FLOPs: %.2fM, Params: %.2fM' % (count_ops / 1e6, count_params / 1e6))
         cls_ops.append(count_ops)

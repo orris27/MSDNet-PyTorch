@@ -60,6 +60,9 @@ def main():
 
     model = getattr(models, args.arch)(args)
     n_flops, n_params = measure_model(model, IM_SIZE, IM_SIZE)    
+    print(model)
+    print('FLOPs:', n_flops)
+    print('#Params:', n_params)
     torch.save(n_flops, os.path.join(args.save, 'flops.pth'))
     del(model)
         

@@ -3,7 +3,7 @@ import glob
 import time
 import argparse
 
-model_names = ['msdnet']
+model_names = ['msdnet', 'msdnet_ours']
 
 arg_parser = argparse.ArgumentParser(
                 description='Image classification PK main script')
