@@ -3,7 +3,7 @@ import glob
 import time
 import argparse
 
-model_names = ['msdnet', 'msdnet_ours']
+#model_names = ['msdnet', 'msdnet_ours']
 
 arg_parser = argparse.ArgumentParser(
                 description='Image classification PK main script')
@@ -42,10 +42,8 @@ data_group.add_argument('-j', '--workers', default=4, type=int, metavar='N',
 arch_group = arg_parser.add_argument_group('arch',
                                            'model architecture setting')
 arch_group.add_argument('--arch', '-a', metavar='ARCH', default='resnet',
-                        type=str, choices=model_names,
-                        help='model architecture: ' +
-                        ' | '.join(model_names) +
-                        ' (default: msdnet)')
+                        type=str, #choices=model_names
+                        )
 arch_group.add_argument('--reduction', default=0.5, type=float,
                         metavar='C', help='compression ratio of DenseNet'
                         ' (1 means dot\'t use compression) (default: 0.5)')
