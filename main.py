@@ -9,12 +9,16 @@ import sys
 import math
 import time
 import shutil
+import numpy as np
 
 from dataloader import get_dataloaders
 from args import arg_parser
 from adaptive_inference import dynamic_evaluate
 import models
 from op_counter import measure_model
+
+
+
 
 args = arg_parser.parse_args()
 
@@ -37,13 +41,38 @@ elif args.data == 'cifar100':
 else:
     args.num_classes = 1000
 
+args.mixup = bool(args.mixup)
+if args.mixup: print('Mix-up is enabled!')
+
 import torch
 import torch.nn as nn
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.optim
 
+
 torch.manual_seed(args.seed)
+
+def mixup_data(x, y, alpha=1.0, use_cuda=True):
+    '''Returns mixed inputs, pairs of targets, and lambda'''
+    if alpha > 0:
+        lam = np.random.beta(alpha, alpha)
+    else:
+        lam = 1
+
+    batch_size = x.size()[0]
+    if use_cuda:
+        index = torch.randperm(batch_size).cuda()
+    else:
+        index = torch.randperm(batch_size)
+
+    mixed_x = lam * x + (1 - lam) * x[index, :]
+    y_a, y_b = y, y[index]
+    return mixed_x, y_a, y_b, lam
+
+
+def mixup_criterion(criterion, pred, y_a, y_b, lam):
+    return lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
 
 def main():
 
@@ -164,9 +193,18 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
         data_time.update(time.time() - end)
 
-        target = target.cuda(async=True)
-        input_var = torch.autograd.Variable(input)
-        target_var = torch.autograd.Variable(target)
+        if args.mixup:
+            input, target_a, target_b, lam = mixup_data(input, target,
+                                                           args.alpha, use_cuda=True)
+            target_a = target_a.cuda(async=True)
+            target_b = target_b.cuda(async=True)
+            input_var = torch.autograd.Variable(input)
+            target_a_var = torch.autograd.Variable(target_a)
+            target_b_var = torch.autograd.Variable(target_b)
+        else:
+            target = target.cuda(async=True)
+            input_var = torch.autograd.Variable(input)
+            target_var = torch.autograd.Variable(target)
 
         output = model(input_var)
         if not isinstance(output, list):
@@ -174,12 +212,24 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
         loss = 0.0
         for j in range(len(output)):
-            loss += criterion(output[j], target_var)
+            if args.mixup:
+                loss += mixup_criterion(criterion, output[j], target_a, target_b, lam)
+            else:
+                loss += criterion(output[j], target_var)
 
         losses.update(loss.item(), input.size(0))
 
         for j in range(len(output)):
-            prec1, prec5 = accuracy(output[j].data, target, topk=(1, 5))
+            #correct += (lam * predicted.eq(targets_a.data).cpu().sum().float()
+            #        + (1 - lam) * predicted.eq(targets_b.data).cpu().sum().float())
+
+            if args.mixup:
+                prec1_a, prec5_a = accuracy(output[j].data, target_a, topk=(1, 5))
+                prec1_b, prec5_b = accuracy(output[j].data, target_b, topk=(1, 5))
+                prec1 = lam * prec1_a + (1 - lam) * prec1_b
+                prec5 = lam * prec5_a + (1 - lam) * prec5_b
+            else:
+                prec1, prec5 = accuracy(output[j].data, target, topk=(1, 5))
             top1[j].update(prec1.item(), input.size(0))
             top5[j].update(prec5.item(), input.size(0))
 

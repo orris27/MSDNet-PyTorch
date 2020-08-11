@@ -86,3 +86,7 @@ optim_group.add_argument('--momentum', default=0.9, type=float, metavar='M',
                          help='momentum (default=0.9)')
 optim_group.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
                          metavar='W', help='weight decay (default: 1e-4)')
+optim_group.add_argument('--mixup', default=0, type=int, help='Flag for mixup')
+optim_group.add_argument('--alpha', default=1., type=float, 
+                         help='mixup interpolation coefficient (default: 1)')
+
