@@ -196,13 +196,13 @@ def train(train_loader, model, criterion, optimizer, epoch):
         if args.mixup:
             input, target_a, target_b, lam = mixup_data(input, target,
                                                            args.alpha, use_cuda=True)
-            target_a = target_a.cuda(async=True)
-            target_b = target_b.cuda(async=True)
+            target_a = target_a.cuda()
+            target_b = target_b.cuda()
             input_var = torch.autograd.Variable(input)
             target_a_var = torch.autograd.Variable(target_a)
             target_b_var = torch.autograd.Variable(target_b)
         else:
-            target = target.cuda(async=True)
+            target = target.cuda()
             input_var = torch.autograd.Variable(input)
             target_var = torch.autograd.Variable(target)
 
@@ -269,7 +269,7 @@ def validate(val_loader, model, criterion):
     end = time.time()
     with torch.no_grad():
         for i, (input, target) in enumerate(val_loader):
-            target = target.cuda(async=True)
+            target = target.cuda()
             input = input.cuda()
 
             input_var = torch.autograd.Variable(input)
