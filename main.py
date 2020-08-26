@@ -49,6 +49,9 @@ import torch.nn as nn
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.optim
+import torch.multiprocessing
+
+torch.multiprocessing.set_sharing_strategy('file_system')
 
 
 torch.manual_seed(args.seed)
@@ -89,7 +92,7 @@ def main():
 
     model = getattr(models, args.arch)(args)
     n_flops, n_params = measure_model(model, IM_SIZE, IM_SIZE)    
-    print(model)
+    #print(model)
     print('FLOPs:', n_flops)
     print('#Params:', n_params)
     torch.save(n_flops, os.path.join(args.save, 'flops.pth'))

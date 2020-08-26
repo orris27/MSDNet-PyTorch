@@ -391,9 +391,15 @@ class MSDNet(nn.Module):
                 self.classifier.append(
                     self._build_classifier_cifar(nIn * args.grFactor[-1], 10))
             elif args.data == 'ImageNet':
-                assert False
-                self.classifier.append(
-                    self._build_classifier_imagenet(nIn * args.grFactor[-1], 1000))
+#                self.classifier.append(
+#                    self._build_classifier_imagenet(nIn * args.grFactor[-1], 1000))
+                if i != self.nBlocks - 1:
+                    self.classifier.append(
+                        ClassifierModuleOurs(in_channel=nIn * args.grFactor[-1], hidden_channel=128, down_scale=down_scales[i], num_btn=self.bottlenecks[i], expansion=3*3, num_classes=1000))
+                else:
+                    self.classifier.append(
+                        self._build_classifier_imagenet(nIn * args.grFactor[-1], 1000))
+
             else:
                 raise NotImplementedError
 

@@ -1,3 +1,5 @@
+datasets/
+checkpoints/
 save/
 # shell script
 *.sh
