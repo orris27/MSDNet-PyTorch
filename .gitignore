@@ -1,3 +1,5 @@
+models/msdnet_test.py
+*.bak
 datasets/
 checkpoints/
 save/

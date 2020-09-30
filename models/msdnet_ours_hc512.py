@@ -364,7 +364,9 @@ class MSDNet(nn.Module):
         #down_scales = [4, 4, 2, 2, 1, 1]
         #down_scales = [1, 1, 1, 1, 1, 1]
         down_scales = [2, 2, 2, 2, 2, 2]
-        self.bottlenecks = [3, 3, 2, 2, 1, 1]
+        #self.bottlenecks = [3, 3, 2, 2, 1, 1]
+        self.bottlenecks = [4, 3, 2, 1]
+        assert len(self.bottlenecks) + 1 == self.nBlocks
         for i in range(self.nBlocks):
             print(' ********************** Block {} '
                   ' **********************'.format(i + 1))
@@ -382,8 +384,7 @@ class MSDNet(nn.Module):
                 # (ClassifierModule(in_channel=64 * block.expansion, hidden_channel=256 * block.expansion, down_scale=4, num_btn=bottlenecks[0], expansion=7*7, num_classes=num_classes))
                 if i != self.nBlocks - 1:
                     self.classifier.append(
-                        #ClassifierModuleOurs(in_channel=nIn * args.grFactor[-1], hidden_channel=128, down_scale=down_scales[i], num_btn=self.bottlenecks[i], expansion=4*4, num_classes=100))
-                        ClassifierModuleOurs(in_channel=nIn * args.grFactor[-1], hidden_channel=32, down_scale=down_scales[i], num_btn=self.bottlenecks[i], expansion=4*4, num_classes=100))
+                        ClassifierModuleOurs(in_channel=nIn * args.grFactor[-1], hidden_channel=128, down_scale=down_scales[i], num_btn=self.bottlenecks[i], expansion=4*4, num_classes=100))
                 else:
                     self.classifier.append(
                         self._build_classifier_cifar(nIn * args.grFactor[-1], 100))
@@ -392,9 +393,15 @@ class MSDNet(nn.Module):
                 self.classifier.append(
                     self._build_classifier_cifar(nIn * args.grFactor[-1], 10))
             elif args.data == 'ImageNet':
-                assert False
-                self.classifier.append(
-                    self._build_classifier_imagenet(nIn * args.grFactor[-1], 1000))
+#                self.classifier.append(
+#                    self._build_classifier_imagenet(nIn * args.grFactor[-1], 1000))
+                if i != self.nBlocks - 1:
+                    self.classifier.append(
+                        ClassifierModuleOurs(in_channel=nIn * args.grFactor[-1], hidden_channel=512, down_scale=down_scales[i], num_btn=self.bottlenecks[i], expansion=3*3, num_classes=1000))
+                else:
+                    self.classifier.append(
+                        self._build_classifier_imagenet(nIn * args.grFactor[-1], 1000))
+
             else:
                 raise NotImplementedError
 

@@ -91,6 +91,7 @@ def main():
         IM_SIZE = 224
 
     model = getattr(models, args.arch)(args)
+    print(model)
     n_flops, n_params = measure_model(model, IM_SIZE, IM_SIZE)    
     #print(model)
     print('FLOPs:', n_flops)
