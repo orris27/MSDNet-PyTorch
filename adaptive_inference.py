@@ -22,18 +22,29 @@ def dynamic_evaluate(model, test_loader, val_loader, args):
     flops = torch.load(os.path.join(args.save, 'flops.pth'))
 
     with open(os.path.join(args.save, 'dynamic.txt'), 'w') as fout:
-        for p in range(1, 40):
-            print("*********************")
-            _p = torch.FloatTensor(1).fill_(p * 1.0 / 20)
-            probs = torch.exp(torch.log(_p) * torch.range(1, args.nBlocks))
-            probs /= probs.sum()
-            acc_val, _, T = tester.dynamic_eval_find_threshold(
-                val_pred, val_target, probs, flops)
+#        for p in range(1, 40):
+#            print("*********************")
+#            _p = torch.FloatTensor(1).fill_(p * 1.0 / 20)
+#            probs = torch.exp(torch.log(_p) * torch.range(1, args.nBlocks))
+#            probs /= probs.sum()
+#            acc_val, _, T = tester.dynamic_eval_find_threshold(
+#                val_pred, val_target, probs, flops)
+#            acc_test, exp_flops = tester.dynamic_eval_with_threshold(
+#                test_pred, test_target, flops, T)
+#            print('T: ', list(T.cpu().numpy()))
+#            print('valid acc: {:.3f}, test acc: {:.3f}, test flops: {:.2f}M'.format(acc_val, acc_test, exp_flops / 1e6))
+#            fout.write('{}\t{}\n'.format(acc_test, exp_flops.item()))
+
+        
+        for threshold in [0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.60, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]:
+            # Same thresholding
+            T = [threshold] * (len(flops) - 1) + [-100000000.0]
+            #T = [0.79204506, 0.5818701, 0.4145896, 0.24300988, -100000000.0]
             acc_test, exp_flops = tester.dynamic_eval_with_threshold(
                 test_pred, test_target, flops, T)
-            print('valid acc: {:.3f}, test acc: {:.3f}, test flops: {:.2f}M'.format(acc_val, acc_test, exp_flops / 1e6))
+            print('T: ', T)
+            print('test acc: {:.3f}, test flops: {:.2f}M'.format(acc_test, exp_flops / 1e6))
             fout.write('{}\t{}\n'.format(acc_test, exp_flops.item()))
-
 
 class Tester(object):
     def __init__(self, model, args=None):

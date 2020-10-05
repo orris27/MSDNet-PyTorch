@@ -365,8 +365,9 @@ class MSDNet(nn.Module):
         #down_scales = [1, 1, 1, 1, 1, 1]
         down_scales = [2, 2, 2, 2, 2, 2]
         #self.bottlenecks = [3, 3, 2, 2, 1, 1]
-        self.bottlenecks = [4, 3, 2, 1]
+        self.bottlenecks = [3, 3, 2, 2]
         assert len(self.bottlenecks) + 1 == self.nBlocks
+        print('BOTTLENECKS:', self.bottlenecks)
         for i in range(self.nBlocks):
             print(' ********************** Block {} '
                   ' **********************'.format(i + 1))
