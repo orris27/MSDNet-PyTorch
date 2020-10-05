@@ -90,15 +90,30 @@ class Tester(object):
         filtered = torch.zeros(n_sample)
         T = torch.Tensor(n_stage).fill_(1e8)
 
+
+        ########################
+        # Example
+        # Suppose we have 3 classifiers, and 6 samples (each row represent maximum prediction for 1 classifier, and the k-th column represents k-th sample)
+        # 0.7, 0.5, 0.6, 0.9, 0.5, 0.6
+        # 0.8, 0.4, 0.2, 0.8, 0.3, 0.7
+        # 0.85, 0.8, 0.5, 0.3, 0.4, 0.9
+        # Suppose we force the 3, 2 and 1 samples leave from the 1st, 2nd and 3rd classifier respectively, then:
+        # We sort the array for each classifier, and we get: (The index denotes the position)
+        # [3, 0, 2, 5, 1, 4]
+        # [0, 3, 5, 1, 4, 2]
+        # [5, 0, 1, 2, 4, 3]
+        # Then we know the 3, 0, 2 should go to exit-0, 5, 1 should go to exit-1 and 4 should go to the 3rd classifier.
+        ########################
+
         for k in range(n_stage - 1):
             acc, count = 0.0, 0
-            out_n = math.floor(n_sample * p[k])
+            out_n = math.floor(n_sample * p[k]) # p determines how many percentage samples can exit from exit-0, exit-1, etc.
             for i in range(n_sample):
-                ori_idx = sorted_idx[k][i]
+                ori_idx = sorted_idx[k][i] # We find the sample that have i-th highest prediction value in the k-th classifier
                 if filtered[ori_idx] == 0:
                     count += 1
                     if count == out_n:
-                        T[k] = max_preds[k][ori_idx]
+                        T[k] = max_preds[k][ori_idx] # record the threshold for current stage
                         break
             filtered.add_(max_preds[k].ge(T[k]).type_as(filtered))
 
